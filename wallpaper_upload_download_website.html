@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wallpaper Gallery with Categories</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 20px;
+      background: #020617;
+    }
+
+    select, input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    .category {
+      padding: 20px;
+    }
+
+    .category h2 {
+      border-left: 5px solid #22d3ee;
+      padding-left: 10px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      padding: 6px;
+      font-size: 15px;
+      color: #e0f2fe;
+    }
+
+    .info {
+      padding: 6px;
+      font-size: 14px;
+      text-align: center;
+      color: #a5f3fc;
+    }
+
+    .card a {
+      display: block;
+      text-align: center;
+      padding: 10px;
+      text-decoration: none;
+      color: #22d3ee;
+      font-weight: bold;
+    }
+
+    .card button {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      cursor: pointer;
+      background: #ef4444;
+      color: #fff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Wallpaper Gallery</h1>
+  <p>Category wise wallpapers upload & download</p>
+</header>
+
+<div class="controls">
+  <select id="categorySelect">
+    <option value="Action">Action</option>
+    <option value="Anime">Anime</option>
+    <option value="Cars">Cars</option>
+    <option value="Nature">Nature</option>
+  </select>
+
+  <input type="file" id="upload" accept="image/*" multiple />
+</div>
+
+<div id="content"></div>
+
+<script>
+  const uploadInput = document.getElementById("upload");
+  const categorySelect = document.getElementById("categorySelect");
+  const content = document.getElementById("content");
+
+  const galleries = {};
+
+  function getGallery(category) {
+    if (!galleries[category]) {
+      const section = document.createElement("div");
+      section.className = "category";
+
+      const title = document.createElement("h2");
+      title.innerText = category;
+
+      const gallery = document.createElement("div");
+      gallery.className = "gallery";
+
+      section.appendChild(title);
+      section.appendChild(gallery);
+      content.appendChild(section);
+
+      galleries[category] = gallery;
+    }
+    return galleries[category];
+  }
+
+  function autoTitle(fileName) {
+    return fileName
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  uploadInput.addEventListener("change", function () {
+    const files = this.files;
+    const category = categorySelect.value;
+    const gallery = getGallery(category);
+
+    for (let file of files) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const img = document.createElement("img");
+        img.src = e.target.result;
+
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "title";
+        titleDiv.innerText = autoTitle(file.name);
+
+        const info = document.createElement("div");
+        info.className = "info";
+
+        img.onload = () => {
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
+          let quality = "Custom";
+
+          if (w >= 3840) quality = "4K";
+          else if (w >= 1920) quality = "1080P";
+          else if (w >= 1280) quality = "720P";
+
+          info.innerText = `${quality} (${w}×${h})`;
+        };
+
+        const link = document.createElement("a");
+        link.href = e.target.result;
+        link.download = file.name;
+        link.innerText = "Download";
+
+        const del = document.createElement("button");
+        del.innerText = "Delete";
+        del.onclick = () => {
+          if (confirm("Is image ko delete karna hai?")) {
+            card.remove();
+          }
+        };
+
+        card.appendChild(img);
+        card.appendChild(titleDiv);
+        card.appendChild(info);
+        card.appendChild(link);
+        card.appendChild(del);
+
+        gallery.appendChild(card);
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    uploadInput.value = "";
+  });
+</script>
+
+</body>
+</html>
